@@ -38,7 +38,7 @@
                      }
 
                      $("#log").append("Video Listesi Getiriliyor...<br>");
-                     retryHmac(episode_id, true);
+                     getvideos(episode_id);
                   },
                   error: function(xhr, status, error){
                      $("#log").append("<font color=\"red\">Hata: Bölüm ID'si alınamıyor. Lütfen Tekrar Deneyin.</font><br>");
@@ -46,10 +46,6 @@
                   }
                });
             });
-
-            function retryHmac(episode_id, first){
-                getvideos(episode_id);
-            }
 
             function getvideos(episode_id){
                var hmac = false;
