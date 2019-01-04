@@ -1,0 +1,83 @@
+<html>
+   <head>
+      <meta charset="UTF-8">
+      <style>*{font-family:Arial;}a{text-decoration:none;}</style>
+      <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/forms-min.css">
+      <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/buttons-min.css">
+      <title>puhutv Downloader</title>
+   </head>
+   <body>
+      <center>
+         <form method="post" class="pure-form">
+            puhutv Bölüm Linki: <br><input type="text" id="link" placeholder="https://puhutv.com/carpisma-1-bolum-izle" style="height:40px;width:400px;"><br>
+            <button id="download" type="submit" class="pure-button pure-input-1-2 pure-button-primary" style="width:100px;">Download</button>
+         </form>
+         <br>
+         <p id="log" style="font-size:70%;"></p>
+         <div id="videos"></div>
+         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+         <script>
+            
+            $("#download").click(function(e){
+               e.preventDefault();
+               $(this).attr("disabled","disabled");
+               $("#videos").text("");
+               $("#log").text("");
+               $("#log").append("Bölüm ID'si getiriliyor...<br>");
+               $.ajax({
+                  url: $("#link").val().replace("puhutv.com/", "puhutv.com/api/slug/"),
+                  dataType: "json",
+                  success: function(data){
+                     var episode_id = data.data.id;
+                     $("#log").append("Episode ID: "+episode_id+"<br>");
+                     if(!$.isNumeric(episode_id))
+                     {
+                        $("#log").append("<font color=\"red\">Hata: Geçersiz Bölüm ID. Lütfen Tekrar Deneyin.</font><br>");
+                        $("#download").removeAttr("disabled");
+                        return;
+                     }
+
+                     $("#log").append("Video Listesi Getiriliyor...<br>");
+                     retryHmac(episode_id, true);
+                  },
+                  error: function(xhr, status, error){
+                     $("#log").append("<font color=\"red\">Hata: Bölüm ID'si alınamıyor. Lütfen Tekrar Deneyin.</font><br>");
+                     $("#download").removeAttr("disabled");
+                  }
+               });
+            });
+
+            function retryHmac(episode_id, first){
+                getvideos(episode_id);
+            }
+
+            function getvideos(episode_id){
+               var hmac = false;
+               $.ajax({
+                  url: "https://puhutv.com/api/assets/"+episode_id+"/videos",
+                  dataType: "json",
+                  async: false,
+                  success: function(data){
+                     var videos = data.data.videos;
+                     for(var vidi in videos)
+                     {
+                        var vid = videos[vidi];
+                        
+                        if(vid.url!="" && vid.video_format=="mp4")
+                        {
+                           $("#videos").append('<a href="'+vid.url+'" target="_blank"><b>'+ vid.quality +'p</b></a><br>');
+                        }
+                     }
+                     $("#download").removeAttr("disabled");
+                  },
+                  error: function(){
+                     $("#log").append("<font color=\"red\">Hata: Bölüm Listesi Getirilemiyor. Lütfen Tekrar Deneyin.</font><br>");
+                     $("#download").removeAttr("disabled");
+                  }
+               });
+               return hmac;
+            }
+         </script>
+      </center>
+   </body>
+</html>
